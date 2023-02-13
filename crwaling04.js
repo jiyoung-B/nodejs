@@ -14,7 +14,7 @@ async function main() { // 비동기 I/O 지원 함수 정의
     const URL = "http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
     const params = {
         'serviceKey' : 'hIpt8OZk1htHNDFV+VCWN576EY3+RmKwVwAVxdwU7WhyMc220lJeSEs9PHP3cZcSUs8MiF4sZiZSDafDna6v0Q==',
-        'returnType' : 'json', 'sidoName':'전국', 'numOfRows':1000, 'ver':1.3 // numOfRows는 최대개수
+        'returnType' : 'json', 'sidoName':'서울', 'numOfRows':1000, 'ver':1.3 // numOfRows는 최대개수
     };
     const headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'};
 
@@ -31,11 +31,23 @@ async function main() { // 비동기 I/O 지원 함수 정의
     let items = json.data['response']['body']['items'];
     //console.log(items);
 
+    let pmGrade = (val) => {
+        // let emoji = '😱';
+        // if (val == '1') emoji = '😍';
+        // else if (val == '2') emoji = '😐';
+        // else if (val == '3') emoji = '😰';
+        //     return emoji;
+
+        let emojis = ['😍', '😐', '😰', '😱'];
+        return emojis[parseInt(val) - 1]; // 숫자로 바꿔야하니까 parseInt
+    }
+
     // 미세먼지 정보 출력
     // pm25Value는 출력 안됨!! -ver:1.3 설정하면 나옴~
     for(let item of items){
         console.log(item.sidoName, item.stationName, item.pm25Value,
-            pmGrade(item.pm10Value), pmGrade(item.pm25Value), item.dataTime);
+            item.pm10Grade, item.pm25Grade,
+            pmGrade(item.pm10Grade), pmGrade(item.pm25Grade), item.dataTime);
     }
     // 등급별 이모지
     // 1등급 좋음 😍
@@ -44,10 +56,6 @@ async function main() { // 비동기 I/O 지원 함수 정의
     // 2등급 매우나쁨 😱
     // pmGrade 함수 만들어서 if로 grade값 넣어줘서 확인
 
-    let pmGrade = (val) => {
-        if(val)
-        return 'hello'
-    }
-};
 
+};
 main();
