@@ -73,13 +73,48 @@ async function main() {
             // getText하면 3개만나온다??? 아닌가..
             console.log(await apt.getAttribute('textContent'));
         }
-        await sleep(3000);
+        await sleep(1500);
 
         for(let addr of aptsaddrs){
             console.log(await addr.getAttribute('textContent'));
         }
 
-        await chrome.sleep(3000);
+        await chrome.sleep(1500);
+
+        // 아이파크 삼성동 항목을 찾아 클릭
+        let idx = 0;
+        for(let val of apts){
+            // // 각 개별 아파트이름 항목으로 마우스 포인트 이동
+            // await chrome.actions().move({orgin: apts[idx]}).perform(); - 뺄게요~
+            console.log(`${idx++} ${await val.getAttribute('textContent')}`)
+            if (await val.getAttribute('textContent') == apt) break;
+        }
+        // 추출한 인덱스값을 이용해서 항목 직접 클릭
+        menu = await chrome.findElement(By.css(`.mCSB_container ul li:nth-child(${idx}) a`));
+        await chrome.actions().move({origin:menu}).click().perform();
+        //await chrome.executeScript('arguments[0].click();', apts[--idx]);// 자바스크립트를 호출해서 클릭할 수 있는 코드
+        await chrome.sleep(1500);
+
+        //-----------------------------
+        // 관리시설 정보 클릭
+        await chrome.wait(until.elementLocated(By.css('.lnbNav li:nth-child(3) a')), 5000);
+        menu = await chrome.findElement(By.css('.lnbNav li:nth-child(3) a'));
+        await chrome.actions().move({origin : menu}).click().perform();
+        await sleep(1000);
+
+        // 지상/지하 주차장 대수 추출
+        let pcnt = await chrome.findElement(By.css('#kaptd_pcnt')).getText();
+        let pcntu = await chrome.findElement(By.css('#kaptd_pcntu')).getText();
+        let tpcnt = await chrome.findElement(By.css('#kaptd_total_pcnt')).getText();
+
+        //console.log(pcnt.getAttribute())// 바로보이는 텍스트는 어트리뷰트 필요없어.
+        console.log(pcnt, pcntu, tpcnt);
+        await sleep(3000);
+        //console.log(`지상 : ${pcnt}, 지하 : ${pcntu}, 총 : ${tpcnt}`)
+
+
+
+
     } catch (ex){
         console.log(ex);
     }finally {
