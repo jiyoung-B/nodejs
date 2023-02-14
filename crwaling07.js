@@ -41,7 +41,7 @@ async function main() {
             .keyDown(Key.CONTROL).sendKeys('v').perform(); //붙여넣기
         await sleep(1000);
 
-        ncp.copy('283662aA');
+        ncp.copy('283662aaA');
         await chrome.actions().click(pwd)
             .keyDown(Key.CONTROL).sendKeys('v').perform();
         await sleep(1000);
@@ -58,8 +58,18 @@ async function main() {
         await sleep(1000);
 
         // 메일 개수 세기...가 잘안됨??
-        let myMailCount = await chrome.findElement(By.css('.num .MY_MAIL_COUNT'));
-        console.log(myMailCount);
+        //let myMailCount = await chrome.findElement(By.css('.num .MY_MAIL_COUNT'));
+
+
+        //const iframe = await chrome.findElement(By.css('#NM_INT_RIGHT > iframe'));
+        //await chrome.switchTo().frame(iframe);
+       // await chrome.switchTo().frame('#minime');
+        await chrome.switchTo().frame('minime');
+
+        let myMailCount = await chrome.findElement(By.css('.num.MY_MAIL_COUNT'));
+
+        //console.log(await myMailCount.getText()); // 둘다 나옵니다.
+        console.log(await myMailCount.getAttribute('textContent')); // 이것도 나와요
 
 
     }catch(ex){
