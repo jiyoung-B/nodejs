@@ -14,11 +14,23 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const mariadb = require('mariadb');
-const dbconfig = require('./dbconfig2.js');
+const dbconfig = require('./dbconfig.js');
 
 
-async function getBookInfo() {
-    let books = [];
+// 사이트 접속
+
+function getBookInfo() {
+    return undefined;
+}
+
+function saveBookInfo(books) {
+    function fetchBooksDOM() {}
+    function fetchBkTitle() {}
+    function fetchBkWriter() {}
+    function fetchBkPrice() {}
+    function exportBooks() {}
+
+}
 
     async function fetchBooksDOM() {
         const URL = "https://www.hanbit.co.kr/store/books/new_book_list.html";
@@ -28,39 +40,41 @@ async function getBookInfo() {
         const html = await axios.get(URL,{
             headers : headers
         });
-
-        const dom = cheerio.load(html.data);
-        console.log(dom);
-        return dom;
+        return html;
     }
-    fetchBooksDOM();
-    console.log(await fetchBooksDOM());
-    function fetchBkTitle(dom) {
-        let titles = [];
-        let elements = dom('.book_tit');
+async function fetchBkTitle(html, title){
+    const dom = cheerio.load(html.data);
+    let titles = [];
+        let elements = dom(title);
         elements.each((idx, title) => {
             console.log(dom(title).text());
             titles.push(dom(title).text());
         });
         return titles;
-    }
-    function fetchBkWriter(dom) {
-        let writers = [];
-        let writer = dom('.book_writer');
-        writer.each((idx, writer) => {
-            writers.push(dom(writer).text());
-        });
-        return writers;
-    }
-    function fetchBkPrice(dom) {
-        let prices = [];
-        let price = dom('.price');
-        price.each((idx, price) => {
-            prices.push(dom(price).text());
-        });
-        return prices;
-    }
-    function exportBooks(titles, writers, prices) {
+}
+
+async function fetchBkWriter(html, writer){
+    const dom = cheerio.load(html.data);
+    let writers = [];
+    let elements = dom(writer);
+    elements.each((idx, write) => {
+        writers.push(dom(write).text());
+    });
+    return writers;
+}
+
+async function fetchBkPrice(html, price){
+    const dom = cheerio.load(html.data);
+    let prices = [];
+    let elements = dom(price);
+    elements.each((idx, pric) => {
+        prices.push(dom(pric).text());
+    });
+    return prices;
+}
+
+
+async function exportBooks(titles, writers, prices) {
         let books = [];
         for(let i = 0; i < titles.length; ++i){
             let book = {};
@@ -72,54 +86,75 @@ async function getBookInfo() {
         return books;
     }
 
-    fetchBooksDOM();
-   let titles =  fetchBkTitle(fetchBooksDOM);
-    let writers = fetchBkWriter(fetchBooksDOM);
-   let prices = fetchBkPrice(fetchBooksDOM);
-
-
-   return exportBooks(titles, writers, prices);
-
-}
-
-async function saveBookInfo(books) {
-    let conn = null;
+async function setBookInfo(books) {
     let sql = ' insert into newbooks (title, writer, price) ' +
         ' values (?, ?, ?) ';
-    let params = [];
+    //let params = [];
+    return sql;
+}
 
-
+async function connect() {
+    let conn = null;
     try {
         conn = await mariadb.createConnection(dbconfig);
-
-        for(let bk of books) {
-            params = [bk.title, bk.writer, bk.price];
-            let result = await conn.execute(sql, params);
-            await conn.commit();
-            console.log(result);
-        }
-    } catch (ex) {
+        return conn;
+    }catch (ex){
         console.error(ex);
-    } finally {
-        if (conn) {
-            try {
-                await conn.close();
-            } catch (ex) {
-                console.error(ex);
-            }
+    }
+}
+
+async function saveInfo(conn, sql, books) {
+    let params = [];
+    for(let bk of books) {
+        params = [bk.title, bk.writer, bk.price];
+        let result = await conn.execute(sql, params);
+        await conn.commit();
+    }
+    disconnect(conn);
+}
+
+async function disconnect(conn) {
+    if(conn){
+        try{
+            await conn.close;
+        }catch (ex){
+            console.error(ex);
         }
     }
-
 }
+
+
 
 async function main(){
     let books = getBookInfo(); // 책 정보 가져오기
-    console.log(await books);
-    console.log(await books);
 
-   // saveBookInfo(books); // 책 저장하기
+    saveBookInfo(books); // 책 저장하기
     // 이렇게는 안돼. 더 넣어야 할거야.
     // 나눠서 값을 전달해서 써야해.
     //axios 로 가져와서 json 저장 후 db 에 저장
 };
+
+//
+// async function main(){
+//     let books = getBookInfo(); // 책 정보 가져오기
+//     console.log(await books);
+//     console.log(await books);
+//
+//    // saveBookInfo(books); // 책 저장하기
+//     // 이렇게는 안돼. 더 넣어야 할거야.
+//     // 나눠서 값을 전달해서 써야해.
+//     //axios 로 가져와서 json 저장 후 db 에 저장
+// };
+
+async function main(){
+    let html = await fetchBooksDOM();
+    let titles = await fetchBkTitle(html, '.book_tit');
+    let writers = await fetchBkWriter(html, '.book_writer');
+    let prices = await fetchBkPrice(html, '.price');
+
+    let books = await exportBooks(titles, writers, prices);
+    let sql =  await saveInfo(conn, sql, books);
+    let conn = await connect();
+    await sqlPutter(conn,sql,params);
+}
 main();
